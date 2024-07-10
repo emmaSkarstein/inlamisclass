@@ -1,0 +1,51 @@
+---
+title: "testing_inla_mcmc"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{testing_inla_mcmc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(inlamisclass)
+library(aplore3) # for lowbwt data
+```
+
+
+```{r}
+dd <- lowbwt
+# recode smoking as 1 (yes) and 0 (no)
+dd$smoke <- ifelse(dd$smoke == "Yes", 1, 0)
+
+# rescale birth weight to kg
+dd$bwt <- dd$bwt/1000
+
+dd <- data.frame(bwt = scale(dd$bwt, scale=F),
+             lwt = scale(dd$lwt, scale=F),
+             smoke = dd$smoke)
+
+# store number of data points for later use:
+n <- nrow(dd)
+
+# Misclassification in smoking status assumed
+MC_matrix <- matrix(c(0.95, 0.05, 0.2, 0.8), nrow = 2, byrow = T)
+
+p <- 0.4
+alpha <- c(log(p/(1-p)), 0)
+
+birthweight_model <- inla_mcmc(formula_moi = bwt ~ smoke + lwt,
+                               formula_imp = smoke ~ lwt,
+                               alpha = alpha, MC_matrix = MC_matrix,
+                               data = dd, niter = 10, nburnin = 0)
+
+make_results_df(birthweight_model, niter = 10)
+```
+
