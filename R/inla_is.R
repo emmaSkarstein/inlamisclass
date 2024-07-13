@@ -1,30 +1,43 @@
 #' Fit model with misclassified covariate with INLA and importance sampling
 #'
-#' @param data data for model
-#' @param niter number of iterations to run
-#' @param sample_pi probabilities to sample the misclassified covariate from.
+#' @inheritParams inla_mcmc
+#' @param ncores number of cores for the parallel computation.
 #'
 #' @return A data frame with the resulting model.
 #' @export
 #'
-inla_is <- function(data, niter, sample_pi){
-  r.out <- INLA::inla(y ~ x + z, data = data)
-  r.out.naive <- INLA::inla(y ~ w + z, data = data)
+inla_is <- function(formula_moi, formula_imp = NULL,
+                    alpha, MC_matrix, data, niter, ncores = 4){
+  r.out.naive <- INLA::inla(formula_moi, data = data)
 
   models_list <- list()
   models_list[[1]] <- r.out.naive
 
   n <- nrow(data)
 
+  # Identify response variable
+  response <- all.vars(formula_moi)[1]
+
+  # Identify error variable
+  error_var <- all.vars(formula_imp)[1]
+
+  # Identify error free covariates
+  error_free_covs <- labels(terms(formula_imp))
+
   mc.out <- parallel::mclapply(1:niter, function(i) {
+
+    sample_pi <- new_pi(alpha, z = data[, error_free_covs],
+                        MC_matrix, w = data[, error_var])
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
     xstar <- stats::rbinom(n, 1, sample_pi)
 
-    dd <- list(y = data$y, xstar = xstar, z = data$z)
+    new_data <- cbind(data, xstar = xstar)
+    new_formula_moi <- stats::reformulate(response = response, termlabels = c("xstar", error_free_covs))
+
     if(i < niter){
-      r.inla <- INLA::inla(y ~ xstar + z,
-                     data = dd,
+      r.inla <- INLA::inla(new_formula_moi,
+                     data = new_data,
                      num.threads = 1,
                      control.mode = list(result = r.out.naive,
                                          restart = TRUE),
@@ -32,21 +45,21 @@ inla_is <- function(data, niter, sample_pi){
                      control.inla = list(int.strategy = 'eb')
       )
     }else if(i == niter){
-      r.inla <- INLA::inla(y ~ xstar + z,
-                     data = dd,
+      r.inla <- INLA::inla(new_formula_moi,
+                     data = new_data,
                      num.threads = 1,
                      control.mode = list(result = r.out.naive,
                                          restart = TRUE))
     }
 
-    results <- c(r.inla$mlik[1,1],
-                 r.inla$summary.fixed$mean,
-                 r.inla$summary.fixed$`0.025quant`[2],
-                 r.inla$summary.fixed$`0.975quant`[2])
+    summary.fixed <- r.inla$summary.fixed
+    summary.fixed$variable <- rownames(summary.fixed)
 
-    names(results) <- c("mlik","intercept","betax","betaz","betax0.025","betax0.975")
+    results <- list(mlik = r.inla$mlik[1,1],
+                    summary.fixed = summary.fixed,
+                    alpha = alpha)
 
     results
 
-  }, mc.cores = 4)
+  }, mc.cores = ncores)
 }
