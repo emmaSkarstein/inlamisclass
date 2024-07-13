@@ -4,11 +4,7 @@
 \alias{make_results_df}
 \title{Summarize results from inla_is or inla_mcmc}
 \usage{
-make_results_df(
-  mcmc_results,
-  niter = 1600,
-  nburnin = length(mcmc_results) - niter
-)
+make_results_df(mcmc_results, niter, nburnin = length(mcmc_results) - niter)
 }
 \arguments{
 \item{mcmc_results}{results from inla_is or inla_mcmc}

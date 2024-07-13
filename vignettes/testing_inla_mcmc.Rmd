@@ -46,6 +46,14 @@ birthweight_model <- inla_mcmc(formula_moi = bwt ~ smoke + lwt,
                                alpha = alpha, MC_matrix = MC_matrix,
                                data = dd, niter = 10, nburnin = 0)
 
-make_results_df(birthweight_model, niter = 10)
+make_results_df(birthweight_model, niter = 10)$moi
+```
+```{r}
+birthweight_model_is <- inla_is(formula_moi = bwt ~ smoke + lwt,
+                               formula_imp = smoke ~ lwt,
+                               alpha = alpha, MC_matrix = MC_matrix,
+                               data = dd, niter = 50, ncores = 4)
+
+is_results <- make_results_df(birthweight_model_is, niter = 50)
 ```
 

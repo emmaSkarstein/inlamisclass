@@ -9,26 +9,53 @@
 #'
 make_results_df <- function(mcmc_results, niter,
                                  nburnin = length(mcmc_results)-niter){
-  #minimum of all marginal log likelihoods:
-  max_LL <- max(do.call(rbind, lapply(mcmc_results, `[[`, "mlik")))
-
+  # List of all log likelihoods
+  LL_vec <- do.call(rbind, lapply(mcmc_results, `[[`, "mlik"))
+  # minimum of all marginal log likelihoods:
+  max_LL <- max(LL_vec)
   # all marginal lls, but subtract the minimum first (for numerical stability):
-  LL <- do.call(rbind, lapply(mcmc_results, `[[`, "mlik")) - max_LL
+  LL <- LL_vec - max_LL
 
   trace <- (nburnin+1):niter
+
   # weights
   WW <- exp(LL[trace]) / sum(exp(LL[trace]))
 
-  betas <-  do.call(rbind, lapply(mcmc_results, `[[`, "betax"))[trace]
-  betas0.025 <-  do.call(rbind, lapply(mcmc_results, `[[`, "betax0.025"))[trace]
-  betas0.975 <-  do.call(rbind, lapply(mcmc_results, `[[`, "betax0.975"))[trace]
+  num_variables <- nrow(mcmc_results[[1]]$summary.fixed)
+  WW_vec <- rep(WW, 1, each = num_variables)
 
-  betax_mean <- sum(betas*WW)
-  betax_0.025 <- sum(betas0.025*WW)
-  betax_0.975 <- sum(betas0.975*WW)
+  all.summary.fixed <- dplyr::bind_rows(
+    lapply(mcmc_results, `[[`, "summary.fixed"), .id = "iteration") |>
+    tidyr::pivot_longer(
+      cols = c("mean", "sd", "0.025quant", "0.5quant", "0.975quant", "mode"),
+      names_to = "summary_statistic")
 
-  dd_results_beta <- data.frame(mean = betax_mean,
-                                "0.025quant" = betax_0.025,
-                                "0.975quant" = betax_0.975)
-  return(dd_results_beta)
+  means <- calculate_summary_statistics(all.summary.fixed, "mean")
+  lower_quant <- calculate_summary_statistics(all.summary.fixed, "0.025quant")
+  upper_quant <- calculate_summary_statistics(all.summary.fixed, "0.975quant")
+
+  summary_moi <- data.frame(means,
+                           "0.025quant" = lower_quant$"0.025quant",
+                           "0.975quant" = upper_quant$"0.975quant")
+
+  summary_imp <- colMeans(do.call(rbind, lapply(mcmc_results, `[[`, "alpha")))
+
+  return(list(moi = summary_moi, imp = summary_imp))
+}
+
+#' Calculate summary statistics
+#'
+#' @param summary_df data frame containing summary.fixed for each iteration (for all fixed effects)
+#' @param summary_stat the name of the summary statistic of interest
+#'
+#' @return a data frame with the weighted average across all iterations for each fixed effect of the model
+#' @keywords internal
+calculate_summary_statistics <- function(summary_df, summary_stat){
+  weighted_avg_summary <- dplyr::filter(summary_df, summary_statistic == summary_stat) |>
+    dplyr::mutate(WW = WW_vec) |>
+    dplyr::group_by(variable) |>
+    dplyr::summarize(statistic = sum(value*WW))
+
+  colnames(weighted_avg_summary) <- c("variable", summary_stat)
+  return(weighted_avg_summary)
 }

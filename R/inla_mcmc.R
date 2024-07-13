@@ -22,7 +22,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
   models_list <- list()
   models_list[[1]] <- r.out.naive
 
-  nn <- nrow(data)
+  n <- nrow(data)
 
   mc.out <- list()
 
@@ -43,7 +43,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
                         MC_matrix, w = data[, error_var])
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
-    xstar <- stats::rbinom(nn, 1, sample_pi)
+    xstar <- stats::rbinom(n, 1, sample_pi)
 
     new_data <- cbind(data, xstar = xstar)
     new_formula_moi <- stats::reformulate(response = response, termlabels = c("xstar", error_free_covs))
@@ -73,29 +73,21 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
                                             return.marginals = FALSE),
                      control.inla = list(int.strategy = 'eb'))
 
+    # This contains all n predicted X-values, and the estimates for alpha.0 and alpha.z
     r.alpha <- INLA::inla.posterior.sample(n = 1, r.inla.x)
-    alpha <- r.alpha[[1]]$latent[c(nn+1, nn+2)]
+    alpha <- r.alpha[[1]]$latent[c(n+1, nrow(r.alpha[[1]]$latent))]
+    names(alpha) <- c("alpha.0", paste0("alpha.", error_free_covs))
 
-    # results <- c(r.inla$mlik[1,1] + sum(log(lik_error)), r.inla$summary.fixed$mean)
-    results <- c(r.inla$mlik[1,1],
-                 r.inla.x$mlik[1,1],
-                 r.inla$summary.fixed$mean,
-                 r.inla$summary.fixed$`0.025quant`[2],
-                 r.inla$summary.fixed$`0.975quant`[2],
-                 alpha[1],
-                 alpha[2])
-    names(results) <- c("mlik", "mlik_z", "intercept", "betax", "betaz",
-                        "betax0.025", "betax0.975", "alpha0", "alphaz")
+    summary.fixed <- r.inla$summary.fixed
+    summary.fixed$variable <- rownames(summary.fixed)
+
+    results <- list(mlik = r.inla$mlik[1,1],
+                    summary.fixed = summary.fixed,
+                    alpha = alpha)
 
     mc.out[[ii]] <- results
   }
 
-  #mc.results <- list(mcmc_results = mc.out,
-  #                   naive_model = summary(lm(y ~ w + z, data = data))$coef,
-  #                   correct_model = summary(lm(y ~ x + z, data = data))$coef,
-  #                   exposure_model = summary(glm(x ~ z, family = "binomial", data = data)))
-
-  #save(mc.results,file="code/RData/mc.out.uncertainty.RData")
   return(mc.out)
 }
 
