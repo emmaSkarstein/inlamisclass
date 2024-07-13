@@ -2,7 +2,7 @@ Package: inlamisclass
 Type: Package
 Title: Fitting Models with Misclassified Covariates with INLA and MCMC
 Version: 0.1.0
-Author: Emma SKarstein
+Author: Emma Skarstein
 Maintainer: The package maintainer <emma@skarstein.no>
 Description: Functions for fitting models with misclassified covariates in INLA with Markov chain Monte-Carlo or importance sampling.
 License: MIT + file LICENSE
