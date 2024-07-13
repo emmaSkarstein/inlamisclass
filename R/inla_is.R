@@ -22,7 +22,7 @@ inla_is <- function(formula_moi, formula_imp = NULL,
   error_var <- all.vars(formula_imp)[1]
 
   # Identify error free covariates
-  error_free_covs <- labels(terms(formula_imp))
+  error_free_covs <- labels(stats::terms(formula_imp))
 
   mc.out <- parallel::mclapply(1:niter, function(i) {
 

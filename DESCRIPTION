@@ -15,5 +15,8 @@ Suggests:
     rmarkdown
 Imports: 
     parallel,
-    stats
+    stats,
+    rlang,
+    dplyr,
+    tidyr
 VignetteBuilder: knitr

@@ -50,11 +50,12 @@ make_results_df <- function(mcmc_results, niter,
 #'
 #' @return a data frame with the weighted average across all iterations for each fixed effect of the model
 #' @keywords internal
+#' @importFrom rlang .data
 calculate_summary_statistics <- function(summary_df, summary_stat){
-  weighted_avg_summary <- dplyr::filter(summary_df, summary_statistic == summary_stat) |>
-    dplyr::mutate(WW = WW_vec) |>
-    dplyr::group_by(variable) |>
-    dplyr::summarize(statistic = sum(value*WW))
+  weighted_avg_summary <- dplyr::filter(summary_df, .data$summary_statistic == summary_stat) |>
+    dplyr::mutate(WW = .data$WW_vec) |>
+    dplyr::group_by(.data$variable) |>
+    dplyr::summarize(statistic = sum(.data$value*.data$WW))
 
   colnames(weighted_avg_summary) <- c("variable", summary_stat)
   return(weighted_avg_summary)
