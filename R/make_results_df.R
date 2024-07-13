@@ -30,9 +30,9 @@ make_results_df <- function(mcmc_results, niter,
       cols = c("mean", "sd", "0.025quant", "0.5quant", "0.975quant", "mode"),
       names_to = "summary_statistic")
 
-  means <- calculate_summary_statistics(all.summary.fixed, "mean")
-  lower_quant <- calculate_summary_statistics(all.summary.fixed, "0.025quant")
-  upper_quant <- calculate_summary_statistics(all.summary.fixed, "0.975quant")
+  means <- calculate_summary_statistics(all.summary.fixed, "mean", WW_vec)
+  lower_quant <- calculate_summary_statistics(all.summary.fixed, "0.025quant", WW_vec)
+  upper_quant <- calculate_summary_statistics(all.summary.fixed, "0.975quant", WW_vec)
 
   summary_moi <- data.frame(means,
                            "0.025quant" = lower_quant$"0.025quant",
@@ -51,9 +51,9 @@ make_results_df <- function(mcmc_results, niter,
 #' @return a data frame with the weighted average across all iterations for each fixed effect of the model
 #' @keywords internal
 #' @importFrom rlang .data
-calculate_summary_statistics <- function(summary_df, summary_stat){
+calculate_summary_statistics <- function(summary_df, summary_stat, WW_vec){
   weighted_avg_summary <- dplyr::filter(summary_df, .data$summary_statistic == summary_stat) |>
-    dplyr::mutate(WW = .data$WW_vec) |>
+    dplyr::mutate(WW = WW_vec) |>
     dplyr::group_by(.data$variable) |>
     dplyr::summarize(statistic = sum(.data$value*.data$WW))
 
