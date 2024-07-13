@@ -4,14 +4,30 @@
 \alias{inla_is}
 \title{Fit model with misclassified covariate with INLA and importance sampling}
 \usage{
-inla_is(data, niter, sample_pi)
+inla_is(
+  formula_moi,
+  formula_imp = NULL,
+  alpha,
+  MC_matrix,
+  data,
+  niter,
+  ncores = 4
+)
 }
 \arguments{
-\item{data}{data for model}
+\item{formula_moi}{formula for the model of interest}
 
-\item{niter}{number of iterations to run}
+\item{formula_imp}{formula for the imputation model}
 
-\item{sample_pi}{probabilities to sample the misclassified covariate from.}
+\item{alpha}{initial values for coefficients for imputation model}
+
+\item{MC_matrix}{misclassification matrix}
+
+\item{data}{data for the model}
+
+\item{niter}{number of iterations for the MCMC}
+
+\item{ncores}{number of cores for the parallel computation.}
 }
 \value{
 A data frame with the resulting model.
