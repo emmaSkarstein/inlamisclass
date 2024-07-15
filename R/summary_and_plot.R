@@ -6,7 +6,6 @@
 #'
 #' @return A dataframe with summary statistics.
 #' @export
-#'
 make_results_df <- function(mcmc_results, niter,
                                  nburnin = length(mcmc_results)-niter){
   # List of all log likelihoods
@@ -37,6 +36,7 @@ make_results_df <- function(mcmc_results, niter,
   summary_moi <- data.frame(means,
                            "0.025quant" = lower_quant$"0.025quant",
                            "0.975quant" = upper_quant$"0.975quant")
+  colnames(summary_moi) <- c("variable", "mean", "0.025quant", "0.975quant")
 
   summary_imp <- colMeans(do.call(rbind, lapply(mcmc_results, `[[`, "alpha")))
 
@@ -60,3 +60,52 @@ calculate_summary_statistics <- function(summary_df, summary_stat, WW_vec){
   colnames(weighted_avg_summary) <- c("variable", summary_stat)
   return(weighted_avg_summary)
 }
+
+#' Plot inlamisclass models
+#'
+#' @inheritParams make_results_df
+#'
+#' @return A ggplot2 object.
+#' @export
+#' @importFrom ggplot2 ggplot aes vars
+#' @importFrom rlang .data
+plot_inlamisclass <- function(mcmc_results, niter = length(mcmc_results),
+                              nburnin = length(mcmc_results)-niter){
+  summary_df <- make_results_df(mcmc_results, niter = niter, nburnin = nburnin)
+  ggplot2::ggplot(summary_df$moi, aes(y = .data$variable)) +
+    ggplot2::geom_point(aes(x = .data$mean)) +
+    ggplot2::geom_errorbarh(aes(xmin = .data$"0.025quant",
+                                xmax = .data$"0.975quant"),
+                            height=.2) +
+    ggplot2::theme_bw()
+
+}
+
+#' Plot and compare inlamisclass models with other INLA models
+#'
+#' @inheritParams make_results_df
+#' @param naive_mod a model that does not account for misclassification
+#'
+#' @return A ggplot2 object.
+#' @export
+#' @importFrom ggplot2 ggplot aes vars
+#' @importFrom rlang .data
+plot_inlamisclass <- function(mcmc_results, niter = length(mcmc_results),
+                              nburnin = length(mcmc_results)-niter, naive_mod){
+
+  summary_df <- make_results_df(mcmc_results, niter = niter, nburnin = nburnin)
+  summary_naive <- naive_mod$summary.fixed
+
+  summary_naive$variable <- rownames(summary_naive)
+
+  all_summary <- dplyr::bind_rows(inlamisclass = summary_df$moi, naive = summary_naive, .id = "model")
+
+
+  ggplot2::ggplot(all_summary, aes(y = .data$model)) +
+    ggplot2::geom_point(aes(x = .data$mean)) +
+    ggplot2::geom_errorbarh(aes(xmin = .data$"0.025quant", xmax = .data$"0.975quant"), height=.2) +
+    ggplot2::facet_wrap(vars(.data$variable), scales = "free_x") +
+    ggplot2::theme_bw()
+
+}
+

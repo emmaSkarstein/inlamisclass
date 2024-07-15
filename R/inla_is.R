@@ -53,7 +53,13 @@ inla_is <- function(formula_moi, formula_imp = NULL,
     }
 
     summary.fixed <- r.inla$summary.fixed
-    summary.fixed$variable <- rownames(summary.fixed)
+
+    # Change name of xstar to error variable
+    variables <- rownames(summary.fixed)
+    error_var_index <- which(variables == "xstar")
+    variables[error_var_index] <- error_var
+
+    summary.fixed <- dplyr::mutate(summary.fixed, variable = variables)
 
     results <- list(mlik = r.inla$mlik[1,1],
                     summary.fixed = summary.fixed,

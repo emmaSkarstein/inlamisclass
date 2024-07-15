@@ -57,3 +57,8 @@ birthweight_model_is <- inla_is(formula_moi = bwt ~ smoke + lwt,
 is_results <- make_results_df(birthweight_model_is, niter = 50)
 ```
 
+```{r}
+naive_mod <- INLA::inla(bwt ~ smoke + lwt, data = dd)
+```
+
+
