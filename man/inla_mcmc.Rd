@@ -11,7 +11,8 @@ inla_mcmc(
   MC_matrix,
   data,
   niter = 1600,
-  nburnin = 100
+  nburnin = 100,
+  ...
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ inla_mcmc(
 \item{niter}{number of iterations for the MCMC}
 
 \item{nburnin}{number of burn-in iterations}
+
+\item{...}{further arguments to be passed to inla().}
 }
 \value{
 A data frame with the resulting model.

@@ -7,17 +7,19 @@
 #' @param data data for the model
 #' @param niter number of iterations for the MCMC
 #' @param nburnin number of burn-in iterations
+#' @param ... further arguments to be passed to inla().
 #'
 #' @return A data frame with the resulting model.
 #' @export
 #'
 inla_mcmc <- function(formula_moi, formula_imp = NULL,
                       alpha, MC_matrix,
-                      data, niter = 1600, nburnin = 100){
+                      data, niter = 1600, nburnin = 100,
+                      ...){
   # So far, this assumes the exposure model just has one covariate.
   # And the formula_moi does not really do much either
 
-  r.out.naive <- INLA::inla(formula_moi, data = data)
+  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
   models_list[[1]] <- r.out.naive
@@ -55,12 +57,14 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
                      control.mode = list(result = models_list[[ii]],
                                          restart = TRUE),
                      control.compute = list(return.marginals = FALSE),
-                     control.inla = list(int.strategy = 'eb'))
+                     control.inla = list(int.strategy = 'eb'),
+                     ...)
     }else if(ii == niter){
       r.inla <- INLA::inla(new_formula_moi,
                      data = new_data,
                      control.mode = list(result = models_list[[ii]],
-                                         restart = TRUE))
+                                         restart = TRUE),
+                     ...)
     }
 
     models_list[[ii+1]] <- r.inla
@@ -110,7 +114,11 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
 #'
 new_pi <- function(alpha, z, MC_matrix, w){
 
-  eta <- alpha[1] + t(alpha[-c(1)]) %*% z
+  if(ncol(z) == 0){
+    eta <- alpha[1]
+  }else{
+    eta <- alpha[1] + t(alpha[-c(1)]) %*% z
+  }
   pi <- 1 / (1 + exp(-eta))
 
   #p(w=1) and p(w=0) that will be used as normalizing constants below

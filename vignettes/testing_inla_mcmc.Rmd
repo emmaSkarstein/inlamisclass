@@ -16,25 +16,11 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(inlamisclass)
-library(aplore3) # for lowbwt data
+library(ggplot2)
 ```
 
 
 ```{r}
-dd <- lowbwt
-# recode smoking as 1 (yes) and 0 (no)
-dd$smoke <- ifelse(dd$smoke == "Yes", 1, 0)
-
-# rescale birth weight to kg
-dd$bwt <- dd$bwt/1000
-
-dd <- data.frame(bwt = scale(dd$bwt, scale=F),
-             lwt = scale(dd$lwt, scale=F),
-             smoke = dd$smoke)
-
-# store number of data points for later use:
-n <- nrow(dd)
-
 # Misclassification in smoking status assumed
 MC_matrix <- matrix(c(0.95, 0.05, 0.2, 0.8), nrow = 2, byrow = T)
 
@@ -44,21 +30,82 @@ alpha <- c(log(p/(1-p)), 0)
 birthweight_model <- inla_mcmc(formula_moi = bwt ~ smoke + lwt,
                                formula_imp = smoke ~ lwt,
                                alpha = alpha, MC_matrix = MC_matrix,
-                               data = dd, niter = 10, nburnin = 0)
+                               data = birthweight, niter = 3, nburnin = 0)
 
-make_results_df(birthweight_model, niter = 10)$moi
+make_results_df(birthweight_model, niter = 3)$moi
 ```
+
 ```{r}
 birthweight_model_is <- inla_is(formula_moi = bwt ~ smoke + lwt,
                                formula_imp = smoke ~ lwt,
                                alpha = alpha, MC_matrix = MC_matrix,
-                               data = dd, niter = 50, ncores = 4)
+                               data = birthweight, niter = 3, ncores = 4)
 
-is_results <- make_results_df(birthweight_model_is, niter = 50)
+is_results <- make_results_df(birthweight_model_is, niter = 3)
 ```
 
 ```{r}
-naive_mod <- INLA::inla(bwt ~ smoke + lwt, data = dd)
+naive_mod <- INLA::inla(bwt ~ smoke + lwt, data = birthweight)
+
+plot_compare_inlamisclass(birthweight_model_is, naive_mod = naive_mod)
 ```
+
+```{r}
+birthweight_model1 <- inla_is(formula_moi = bwt ~ smoke + lwt,
+                              formula_imp = smoke ~ lwt,
+                              alpha = c(log(0.4/(1-0.4)), 0),
+                              MC_matrix = MC_matrix,
+                              data = birthweight, niter = 3)
+birthweight_model2 <- inla_is(formula_moi = bwt ~ smoke + lwt,
+                                formula_imp = smoke ~ lwt,
+                                alpha = c(-3, 0.02),
+                                MC_matrix = MC_matrix,
+                                data = birthweight, niter = 3)
+
+plot_compare_inlamisclass(mcmc_results = list(inlamisclass1 = birthweight_model1, 
+                               inlamisclass2 = birthweight_model2), 
+                          naive_mod = naive_mod, niter = 3, num_inlamisclass_models = 2)
+
+
+```
+
+```{r}
+library(inlamisclass)
+library(dplyr)
+library(INLA)
+
+validation <- filter(case_control_data, !is.na(x))
+complete_data <- filter(case_control_data, is.na(x))
+
+# Estimates misclassification matrix without accounting for y
+# w = 1 given x = 0
+pi10 <- sum((validation$w-validation$x) == 1)/sum(validation$x==0)
+
+# w = 0, given x = 1, y = 1
+pi01 <- sum(validation$w-validation$x == -1)/sum(validation$x==1)
+
+M <- matrix(c(1-pi10, pi10, pi01, 1-pi01), byrow = TRUE, nrow = 2)
+M
+
+exp_mod <- inla(x~1, data = validation, family = "binomial", Ntrials = 1)
+exp_mod$summary.fixed
+
+case_control_model <- inla_is(formula_moi = d ~ w,
+                              formula_imp = w ~ 1,
+                              alpha = -0.08775608,
+                              MC_matrix = M,
+                              data = complete_data,
+                              niter = 3, 
+                              family = "binomial", Ntrials = 1)
+
+make_results_df(case_control_model)$moi
+
+naive_cc <- inla(d ~ w, data = complete_data, family = "binomial", Ntrial = 1)
+naive_cc$summary.fixed
+
+plot_compare_inlamisclass(case_control_model, naive_mod = naive_cc, plot_intercept = TRUE)
+```
+
+
 
 

@@ -6,7 +6,7 @@
 #'
 #' @return A dataframe with summary statistics.
 #' @export
-make_results_df <- function(mcmc_results, niter,
+make_results_df <- function(mcmc_results, niter = length(mcmc_results),
                                  nburnin = length(mcmc_results)-niter){
   # List of all log likelihoods
   LL_vec <- do.call(rbind, lapply(mcmc_results, `[[`, "mlik"))
@@ -84,28 +84,54 @@ plot_inlamisclass <- function(mcmc_results, niter = length(mcmc_results),
 #' Plot and compare inlamisclass models with other INLA models
 #'
 #' @inheritParams make_results_df
+#' @param mcmc_results an inlamisclass model or list of inlamisclass models.
 #' @param naive_mod a model that does not account for misclassification
+#' @param plot_intercept should estimated intercept be plotted?
+#' @param num_inlamisclass_models number of inlamisclass models if mcmc_results is a list
 #'
 #' @return A ggplot2 object.
 #' @export
 #' @importFrom ggplot2 ggplot aes vars
 #' @importFrom rlang .data
-plot_inlamisclass <- function(mcmc_results, niter = length(mcmc_results),
-                              nburnin = length(mcmc_results)-niter, naive_mod){
+plot_compare_inlamisclass <- function(mcmc_results, niter = NULL,
+                              nburnin = 0, naive_mod, plot_intercept = FALSE, num_inlamisclass_models = 1){
 
-  summary_df <- make_results_df(mcmc_results, niter = niter, nburnin = nburnin)
+  if(is.null(niter)){
+    niter <- length(mcmc_results)
+  }
+  if(num_inlamisclass_models == 1){
+    mcmc_results <- list(mcmc_results)
+  }
+  summary_list <- list()
+  for(i in 1:num_inlamisclass_models){
+    summary_list[[i]] <- make_results_df(mcmc_results[[i]], niter = niter, nburnin = nburnin)$moi
+  }
+  summary_inlamisclass <- dplyr::bind_rows(summary_list, .id = "submodel")
   summary_naive <- naive_mod$summary.fixed
-
   summary_naive$variable <- rownames(summary_naive)
 
-  all_summary <- dplyr::bind_rows(inlamisclass = summary_df$moi, naive = summary_naive, .id = "model")
+  if(!plot_intercept){
+    summary_inlamisclass <- dplyr::filter(summary_inlamisclass, .data$variable != "(Intercept)")
+    summary_naive <- dplyr::filter(summary_naive, .data$variable != "(Intercept)")
+  }
 
+  if(num_inlamisclass_models == 1){summary_inlamisclass$submodel <- rep("", nrow(summary_inlamisclass))}
+  summary_naive$submodel <- ""
+
+  all_summary <- dplyr::bind_rows(inlamisclass = summary_inlamisclass, naive = summary_naive, .id = "model_type")
+
+  all_summary$model <- paste0(all_summary$model_type, "[", all_summary$submodel, "]")
+
+  all_summary$greek <- paste0("beta", "[", all_summary$variable, "]")
 
   ggplot2::ggplot(all_summary, aes(y = .data$model)) +
     ggplot2::geom_point(aes(x = .data$mean)) +
     ggplot2::geom_errorbarh(aes(xmin = .data$"0.025quant", xmax = .data$"0.975quant"), height=.2) +
-    ggplot2::facet_wrap(vars(.data$variable), scales = "free_x") +
-    ggplot2::theme_bw()
+    ggplot2::scale_y_discrete(limits = rev, labels = scales::parse_format()) +
+    ggplot2::facet_wrap(vars(.data$greek), scales = "free_x", labeller = ggplot2::label_parsed) +
+    ggplot2::theme_bw() +
+    ggplot2::xlab("Posterior mean and 95% credible intervals") +
+    ggplot2::theme(axis.title.y = ggplot2::element_blank())
 
 }
 

@@ -14,7 +14,7 @@ A data frame with 189 rows and 3 columns:
 }
 }
 \source{
-The dataset is simulated.
+Hosmer et al. (2013), <https://books.google.no/books?id=64JYAwAAQBAJ>
 }
 \usage{
 birthweight

@@ -7,8 +7,8 @@
 #' @export
 #'
 inla_is <- function(formula_moi, formula_imp = NULL,
-                    alpha, MC_matrix, data, niter, ncores = 4){
-  r.out.naive <- INLA::inla(formula_moi, data = data)
+                    alpha, MC_matrix, data, niter, ncores = 4, ...){
+  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
   models_list[[1]] <- r.out.naive
@@ -42,14 +42,16 @@ inla_is <- function(formula_moi, formula_imp = NULL,
                      control.mode = list(result = r.out.naive,
                                          restart = TRUE),
                      control.compute = list(return.marginals = FALSE),
-                     control.inla = list(int.strategy = 'eb')
+                     control.inla = list(int.strategy = 'eb'),
+                     ...
       )
     }else if(i == niter){
       r.inla <- INLA::inla(new_formula_moi,
                      data = new_data,
                      num.threads = 1,
                      control.mode = list(result = r.out.naive,
-                                         restart = TRUE))
+                                         restart = TRUE),
+                     ...)
     }
 
     summary.fixed <- r.inla$summary.fixed

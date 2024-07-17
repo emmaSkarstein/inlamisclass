@@ -11,7 +11,8 @@ inla_is(
   MC_matrix,
   data,
   niter,
-  ncores = 4
+  ncores = 4,
+  ...
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ inla_is(
 \item{niter}{number of iterations for the MCMC}
 
 \item{ncores}{number of cores for the parallel computation.}
+
+\item{...}{further arguments to be passed to inla().}
 }
 \value{
 A data frame with the resulting model.

@@ -7,15 +7,7 @@
 plot_inlamisclass(
   mcmc_results,
   niter = length(mcmc_results),
-  nburnin = length(mcmc_results) - niter,
-  naive_mod
-)
-
-plot_inlamisclass(
-  mcmc_results,
-  niter = length(mcmc_results),
-  nburnin = length(mcmc_results) - niter,
-  naive_mod
+  nburnin = length(mcmc_results) - niter
 )
 }
 \arguments{
@@ -24,16 +16,10 @@ plot_inlamisclass(
 \item{niter}{number of iterations for the MCMC}
 
 \item{nburnin}{number of iterations for the burn-in}
-
-\item{naive_mod}{a model that does not account for misclassification}
 }
 \value{
-A ggplot2 object.
-
 A ggplot2 object.
 }
 \description{
 Plot inlamisclass models
-
-Plot and compare inlamisclass models with other INLA models
 }
