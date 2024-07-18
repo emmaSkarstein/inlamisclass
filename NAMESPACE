@@ -2,9 +2,9 @@
 
 export(generate_misclassified)
 export(inla_is)
+export(inla_is_conditional)
 export(inla_mcmc)
 export(make_results_df)
-export(new_pi)
 export(plot_compare_inlamisclass)
 export(plot_inlamisclass)
 importFrom(ggplot2,aes)

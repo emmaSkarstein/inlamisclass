@@ -110,7 +110,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
 #' @param w vector with misclassified covariate
 #'
 #' @return a vector with probabilities
-#' @export
+#' @keywords internal
 #'
 new_pi <- function(alpha, z, MC_matrix, w){
 
