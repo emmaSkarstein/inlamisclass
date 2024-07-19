@@ -19,7 +19,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
   # So far, this assumes the exposure model just has one covariate.
   # And the formula_moi does not really do much either
 
-  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
+  r.out.naive <- INLA::inla(formula_moi, data = data)#, ...)
 
   models_list <- list()
   models_list[[1]] <- r.out.naive
@@ -34,14 +34,17 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
   # Identify error variable
   error_var <- all.vars(formula_imp)[1]
 
+  # Covariates in imputation model
+  imp_covs <- labels(stats::terms(formula_imp))
+
   # Identify error free covariates
-  error_free_covs <- labels(stats::terms(formula_imp))
+  error_free_covs <- setdiff(c(response, error_var), all.vars(formula_moi))
 
 
   for (ii in 1:niter){
     #print(sprintf("%d", ii))
 
-    sample_pi <- new_pi(alpha, z = data[, error_free_covs],
+    sample_pi <- new_pi(alpha, z = data[, imp_covs],
                         MC_matrix, w = data[, error_var])
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
@@ -70,7 +73,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
     models_list[[ii+1]] <- r.inla
 
     # sample new alpha for the exposure model of x. To this end, use xstar to fit the model and then extract alpha
-    new_formula_imp <- stats::reformulate(response = "xstar", termlabels = error_free_covs)
+    new_formula_imp <- stats::reformulate(response = "xstar", termlabels = imp_covs)
     r.inla.x <- INLA::inla(new_formula_imp, data = new_data,
                      family = "binomial",
                      control.compute = list(config = TRUE,
@@ -80,7 +83,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
     # This contains all n predicted X-values, and the estimates for alpha.0 and alpha.z
     r.alpha <- INLA::inla.posterior.sample(n = 1, r.inla.x)
     alpha <- r.alpha[[1]]$latent[c(n+1, nrow(r.alpha[[1]]$latent))]
-    names(alpha) <- c("alpha.0", paste0("alpha.", error_free_covs))
+    names(alpha) <- c("alpha.0", paste0("alpha.", imp_covs))
 
     summary.fixed <- r.inla$summary.fixed
     summary.fixed$variable <- rownames(summary.fixed)
@@ -114,7 +117,11 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
 #'
 new_pi <- function(alpha, z, MC_matrix, w){
 
-  if(ncol(z) == 0){
+  # Need to check nrow(t(z)) since
+  # - if z is a vector, ncol(z) = NULL, but nrow(t(z)) = 1
+  # - if z is a matrix, nrow(t(z)) = ncol(z)
+  # - if z is empty (no covariates in imp. model), then nrow(t(z)) = 0.
+  if(nrow(t(z)) == 0){
     eta <- alpha[1]
   }else{
     eta <- alpha[1] + t(alpha[-c(1)]) %*% z
