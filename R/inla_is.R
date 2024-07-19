@@ -157,7 +157,11 @@ inla_is_conditional <- function(formula_moi, formula_imp = NULL,
 #'
 new_pi_conditional <- function(alpha, z, MC_0, MC_1, w){
 
-  if(is.null(ncol(z)) || ncol(z) == 0){
+  # Need to check nrow(t(z)) since
+  # - if z is a vector, ncol(z) = NULL, but nrow(t(z)) = 1
+  # - if z is a matrix, nrow(t(z)) = ncol(z)
+  # - if z is empty (no covariates in imp. model), then nrow(t(z)) = 0.
+  if(nrow(t(z)) == 0){
     eta <- alpha[1]
   }else{
     eta <- alpha[1] + t(alpha[-c(1)]) %*% z
