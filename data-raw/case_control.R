@@ -19,7 +19,7 @@ case_control_data_raw1 <- matrix(c(
 
 case_control_data_raw2 <- data.frame(case_control_data_raw1)
 
-colnames(case_control_data_raw2) <- c("d", "x", "w")
+colnames(case_control_data_raw2) <- c("y", "x", "w")
 
 case_control_data <- case_control_data_raw2 #%>%
   #mutate(complete = ifelse(is.na(x), 0, 1))

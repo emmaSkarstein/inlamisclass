@@ -14,14 +14,14 @@
 
 #' Case-control study on cervical cancer
 #'
-#' A dataset with 2044 observations, with whether or not a patient has cervical cancer as response, and exposure to herpes simplex virus type 2 measured by two different procedures as covariates. The first procedure is the most accurate, and that measurement is recorded as `x`, whereas the other procedure is less accurate and is recorded as `w`. The more accurate measurement is only available for 115 patients, while the less accurate measurement is available for all subjects, meaning that we have a validation data set.
+#' A dataset with 2044 observations, with whether or not a patient has cervical cancer as response, and exposure to herpes simplex virus type 2 (HSV-2) measured by two different procedures as covariates. The first procedure is the most accurate, and that measurement is recorded as `x`, whereas the other procedure is less accurate and is recorded as `w`. The more accurate measurement is only available for 115 patients, while the less accurate measurement is available for all subjects, meaning that we have a validation data set.
 #'
 #' @format ## `case_control_data`
 #' A data frame with 189 rows and 3 columns:
 #' \describe{
-#'   \item{d}{cervical cancer status (1 = cases (has cervical cancer), 0 = controls)}
-#'   \item{x}{measurement from a refined western blot procedure (more accurate)}
-#'   \item{w}{measurement from less accurate western blot procedure}
+#'   \item{y}{cervical cancer status (1 = cases (has cervical cancer), 0 = controls)}
+#'   \item{x}{exposure to HSV-2 (0/1) measured with a refined western blot procedure (more accurate)}
+#'   \item{w}{exposure to HSV-2 (0/1) measured with a less accurate western blot procedure}
 #' }
 #' @source Carroll, Gain and Lubin (1993), <https://doi.org/10.1080/01621459.1993.10594310>
 "case_control_data"
