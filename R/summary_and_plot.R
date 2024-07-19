@@ -8,6 +8,7 @@
 #' @export
 make_results_df <- function(mcmc_results, niter = length(mcmc_results),
                                  nburnin = length(mcmc_results)-niter){
+
   # List of all log likelihoods
   LL_vec <- do.call(rbind, lapply(mcmc_results, `[[`, "mlik"))
   # minimum of all marginal log likelihoods:
@@ -23,8 +24,11 @@ make_results_df <- function(mcmc_results, niter = length(mcmc_results),
   num_variables <- nrow(mcmc_results[[1]]$summary.fixed)
   WW_vec <- rep(WW, 1, each = num_variables)
 
+  mcmc_results_after_burnin <- lapply(trace, function(i) mcmc_results[[i]])
+
   all.summary.fixed <- dplyr::bind_rows(
-    lapply(mcmc_results, `[[`, "summary.fixed"), .id = "iteration") |>
+    lapply(mcmc_results_after_burnin,
+           `[[`, "summary.fixed"), .id = "iteration") |>
     tidyr::pivot_longer(
       cols = c("mean", "sd", "0.025quant", "0.5quant", "0.975quant", "mode"),
       names_to = "summary_statistic")
@@ -38,7 +42,7 @@ make_results_df <- function(mcmc_results, niter = length(mcmc_results),
                            "0.975quant" = upper_quant$"0.975quant")
   colnames(summary_moi) <- c("variable", "mean", "0.025quant", "0.975quant")
 
-  summary_imp <- colMeans(do.call(rbind, lapply(mcmc_results, `[[`, "alpha")))
+  summary_imp <- colMeans(do.call(rbind, lapply(mcmc_results_after_burnin, `[[`, "alpha")))
 
   return(list(moi = summary_moi, imp = summary_imp))
 }
