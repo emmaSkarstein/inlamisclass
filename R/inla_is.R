@@ -117,23 +117,14 @@ inla_is_conditional <- function(formula_moi, formula_imp = NULL,
     new_data <- cbind(data, xstar = xstar)
     new_formula_moi <- stats::reformulate(response = response, termlabels = c("xstar", error_free_covs))
 
-    if(i < niter){
-      r.inla <- INLA::inla(new_formula_moi,
-                           data = new_data,
-                           num.threads = 1,
-                           control.mode = list(result = r.out.naive,
-                                               restart = TRUE),
-                           control.compute = list(return.marginals = FALSE),
-                           control.inla = list(int.strategy = 'eb'),
-                           ...)
-    }else if(i == niter){
-      r.inla <- INLA::inla(new_formula_moi,
-                           data = new_data,
-                           num.threads = 1,
-                           control.mode = list(result = r.out.naive,
-                                               restart = TRUE),
-                           ...)
-    }
+    r.inla <- INLA::inla(new_formula_moi,
+                         data = new_data,
+                         num.threads = 1,
+                         control.mode = list(result = r.out.naive,
+                                             restart = TRUE),
+                         control.compute = list(return.marginals = FALSE),
+                         control.inla = list(int.strategy = 'eb'),
+                         ...)
 
     summary.fixed <- r.inla$summary.fixed
 
