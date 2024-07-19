@@ -30,9 +30,9 @@ alpha <- c(log(p/(1-p)), 0)
 birthweight_model <- inla_mcmc(formula_moi = bwt ~ smoke + lwt,
                                formula_imp = smoke ~ lwt,
                                alpha = alpha, MC_matrix = MC_matrix,
-                               data = birthweight, niter = 3, nburnin = 0)
+                               data = birthweight, niter = 3, nburnin = 1)
 
-make_results_df(birthweight_model, niter = 3)$moi
+make_results_df(birthweight_model, niter = 3, nburnin = 1)$moi
 ```
 
 ```{r}
@@ -113,13 +113,11 @@ library(inlamisclass)
 library(dplyr)
 library(INLA)
 
-niter <- 10000
-
 validation <- filter(case_control_data, !is.na(x))
 incomplete_data <- filter(case_control_data, is.na(x))
 
-validation1 <- filter(validation, d == 1)
-validation0 <- filter(validation, d == 0)
+validation1 <- filter(validation, y == 1)
+validation0 <- filter(validation, y == 0)
 
 # w = 1 given x = 0, y = 1
 pi10_y1 <- sum((validation1$w-validation1$x) == 1)/sum(validation1$x==0)
@@ -138,10 +136,10 @@ M1
 M0 <- matrix(c(1-pi10_y0, pi10_y0, pi01_y0, 1-pi01_y0), byrow = TRUE, nrow = 2)
 M0
 
-alphas <- glm(x~d, family = "binomial", data = validation)$coef
+alphas <- glm(x~y, family = "binomial", data = validation)$coef
 
-case_control_model <- inla_is_conditional(formula_moi = d ~ w,
-                              formula_imp = w ~ d,
+case_control_model <- inla_is_conditional(formula_moi = y ~ w,
+                              formula_imp = w ~ y,
                               alpha = alphas,
                               MC_1 = M1, MC_0 = M0,
                               data = incomplete_data,
