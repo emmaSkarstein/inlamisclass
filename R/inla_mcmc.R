@@ -61,7 +61,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
     models_list[[ii+1]] <- r.inla
 
     # sample new alpha for the exposure model of x. To this end, use xstar to fit the model and then extract alpha
-    new_formula_imp <- stats::reformulate(response = "xstar", termlabels = imp_covs)
+    new_formula_imp <- stats::reformulate(response = "xstar", termlabels = vars$imp_covs)
     r.inla.x <- INLA::inla(new_formula_imp, data = new_data,
                      family = "binomial",
                      control.compute = list(config = TRUE,
