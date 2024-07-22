@@ -21,7 +21,7 @@ identify_vars <- function(formula_moi, formula_imp){
   return(list(response = response,
               error_var = error_var,
               imp_covs = imp_covs,
-              errror_free_covs = error_free_covs))
+              error_free_covs = error_free_covs))
 }
 
 
@@ -65,8 +65,7 @@ new_pi <- function(alpha, z, MC_matrix, w){
 #'
 #' @param alpha coefficients for the imputation model
 #' @param z vector of covariates for imputation model, and that the misclassification matrix is conditioned on.
-#' @param MC_1 misclassification matrix for z = 1
-#' @param MC_0 misclassification matrix for z = 0
+#' @param MC_matrix list of two misclassification matrices, one for conditioning_var = 0, and the other for conditioning_var = 1.
 #' @param w vector with misclassified covariate
 #' @param conditioning_var variable that the misclassification is conditional on
 #'
@@ -89,6 +88,7 @@ new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
   MC_0 <- MC_matrix$MC_0
   MC_1 <- MC_matrix$MC_1
 
+  # This produces a list with n entries,
   M_22 <- MC_0[2,2]*(1-conditioning_var) + MC_1[2,2]*conditioning_var
   M_12 <- MC_0[1,2]*(1-conditioning_var) + MC_1[1,2]*conditioning_var
 
