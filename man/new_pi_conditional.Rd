@@ -11,13 +11,11 @@ new_pi_conditional(alpha, z, MC_matrix, w, conditioning_var)
 
 \item{z}{vector of covariates for imputation model, and that the misclassification matrix is conditioned on.}
 
+\item{MC_matrix}{list of two misclassification matrices, one for conditioning_var = 0, and the other for conditioning_var = 1.}
+
 \item{w}{vector with misclassified covariate}
 
 \item{conditioning_var}{variable that the misclassification is conditional on}
-
-\item{MC_1}{misclassification matrix for z = 1}
-
-\item{MC_0}{misclassification matrix for z = 0}
 }
 \value{
 a vector with probabilities
