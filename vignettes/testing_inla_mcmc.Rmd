@@ -136,7 +136,8 @@ M1
 M0 <- matrix(c(1-pi10_y0, pi10_y0, pi01_y0, 1-pi01_y0), byrow = TRUE, nrow = 2)
 M0
 
-alphas <- glm(x~y, family = "binomial", data = validation)$coef
+exp_glm <- glm(x~y, family = "binomial", data = validation)$coef
+alphas <- exp_glm["(Intercept)"] + c(0, exp_glm["y"])
 
 case_control_model <- inla_is(formula_moi = y ~ w,
                               formula_imp = w ~ y,
@@ -144,11 +145,23 @@ case_control_model <- inla_is(formula_moi = y ~ w,
                               MC_matrix = list(MC_1 = M1, MC_0 = M0),
                               data = incomplete_data,
                               niter = 3,
-                              conditional = TRUE,
+                              conditional = "y",
                               family = "binomial", Ntrials = 1)
 
 ```
 
+```{r}
+case_control_model3 <- inla_is(formula_moi = y ~ w,
+                              formula_imp = w ~ 1,
+                              alpha = exp_glm["(Intercept)"],
+                              MC_matrix = list(MC_1 = M1, MC_0 = M0),
+                              data = incomplete_data,
+                              niter = 3,
+                              conditional = "y",
+                              family = "binomial", Ntrials = 1)
+
+make_results_df(case_control_model3, niter = niter)
+```
 
 
 

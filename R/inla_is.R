@@ -2,14 +2,14 @@
 #'
 #' @inheritParams inla_mcmc
 #' @param ncores number of cores for the parallel computation.
-#' @param conditional Is the misclassification matrix conditional on other variables (so far only the moi response is possible, but this could easily be changed)
+#' @param conditional if the misclassification probabilities are conditional on some variable, then this should be the name of that variable.
 #'
 #' @return A data frame with the resulting model.
 #' @export
 #'
 inla_is <- function(formula_moi, formula_imp = NULL,
                     alpha, MC_matrix, data, niter, ncores = 4,
-                    conditional = FALSE, ...){
+                    conditional = NULL, ...){
   r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
@@ -21,12 +21,13 @@ inla_is <- function(formula_moi, formula_imp = NULL,
 
   mc.out <- parallel::mclapply(1:niter, function(i) {
 
-    if(!conditional){
-      sample_pi <- new_pi(alpha, z = data[, vars$imp_covs],
+    if(is.null(conditional)){
+      sample_pi <- new_pi(alpha = alpha, z = data[, vars$imp_covs],
                           MC_matrix, w = data[, vars$error_var])
     }else{
-      sample_pi <- new_pi_conditional(alpha, z = data[, vars$imp_covs],
-                                      MC_matrix, w = data[, vars$error_var])
+      sample_pi <- new_pi_conditional(alpha = alpha, z = data[, vars$imp_covs],
+                                      MC_matrix, w = data[, vars$error_var],
+                                      conditioning_var = data[, conditional])
     }
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it

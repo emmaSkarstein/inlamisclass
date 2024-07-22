@@ -68,11 +68,12 @@ new_pi <- function(alpha, z, MC_matrix, w){
 #' @param MC_1 misclassification matrix for z = 1
 #' @param MC_0 misclassification matrix for z = 0
 #' @param w vector with misclassified covariate
+#' @param conditioning_var variable that the misclassification is conditional on
 #'
 #' @return a vector with probabilities
 #'
 #'
-new_pi_conditional <- function(alpha, z, MC_matrix, w){
+new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
 
   # Need to check nrow(t(z)) since
   # - if z is a vector, ncol(z) = NULL, but nrow(t(z)) = 1
@@ -88,9 +89,10 @@ new_pi_conditional <- function(alpha, z, MC_matrix, w){
   MC_0 <- MC_matrix$MC_0
   MC_1 <- MC_matrix$MC_1
 
+  M_22 <- MC_0[2,2]*(1-conditioning_var) + MC_1[2,2]*conditioning_var
+  M_12 <- MC_0[1,2]*(1-conditioning_var) + MC_1[1,2]*conditioning_var
+
   #p(w=1) and p(w=0) that will be used as normalizing constants below
-  M_22 <- MC_0[2,2]*(1-z) + MC_1[2,2]*z
-  M_12 <- MC_0[1,2]*(1-z) + MC_1[1,2]*z
   pw1 <- M_22 * pi + M_12*(1 - pi)
   pw0 <- 1 - pw1
 

@@ -4,7 +4,7 @@
 \alias{new_pi_conditional}
 \title{Calculation of new probabilities for x, given the alpha (and rest)}
 \usage{
-new_pi_conditional(alpha, z, MC_matrix, w)
+new_pi_conditional(alpha, z, MC_matrix, w, conditioning_var)
 }
 \arguments{
 \item{alpha}{coefficients for the imputation model}
@@ -12,6 +12,8 @@ new_pi_conditional(alpha, z, MC_matrix, w)
 \item{z}{vector of covariates for imputation model, and that the misclassification matrix is conditioned on.}
 
 \item{w}{vector with misclassified covariate}
+
+\item{conditioning_var}{variable that the misclassification is conditional on}
 
 \item{MC_1}{misclassification matrix for z = 1}
 
