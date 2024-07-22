@@ -19,7 +19,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
   # So far, this assumes the exposure model just has one covariate.
   # And the formula_moi does not really do much either
 
-  r.out.naive <- INLA::inla(formula_moi, data = data)#, ...)
+  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
   models_list[[1]] <- r.out.naive
@@ -28,32 +28,20 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
 
   mc.out <- list()
 
-  # Identify response variable
-  response <- all.vars(formula_moi)[1]
-
-  # Identify error variable
-  error_var <- all.vars(formula_imp)[1]
-
-  # Covariates in imputation model
-  imp_covs <- labels(stats::terms(formula_imp))
-
-  # Identify error free covariates
-  error_free_covs <- setdiff(c(response, error_var), all.vars(formula_moi))
-
+  vars <- identify_vars(formula_moi = formula_moi, formula_imp = formula_imp)
 
   for (ii in 1:niter){
     #print(sprintf("%d", ii))
 
-    sample_pi <- new_pi(alpha, z = data[, imp_covs],
-                        MC_matrix, w = data[, error_var])
+    sample_pi <- new_pi(alpha, z = data[, vars$imp_covs],
+                        MC_matrix, w = data[, vars$error_var])
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
     xstar <- stats::rbinom(n, 1, sample_pi)
 
     new_data <- cbind(data, xstar = xstar)
-    new_formula_moi <- stats::reformulate(response = response, termlabels = c("xstar", error_free_covs))
+    new_formula_moi <- stats::reformulate(response = vars$response, termlabels = c("xstar", vars$error_free_covs))
 
-    #r.inla <- inla(y ~ xstar + z, data=dd,num.threads=1, control.mode = list(result = r.out,restart=TRUE))
     if(ii < niter){
       r.inla <- INLA::inla(new_formula_moi,
                      data = new_data,
@@ -83,7 +71,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
     # This contains all n predicted X-values, and the estimates for alpha.0 and alpha.z
     r.alpha <- INLA::inla.posterior.sample(n = 1, r.inla.x)
     alpha <- r.alpha[[1]]$latent[c(n+1, nrow(r.alpha[[1]]$latent))]
-    names(alpha) <- c("alpha.0", paste0("alpha.", imp_covs))
+    names(alpha) <- c("alpha.0", paste0("alpha.", vars$imp_covs))
 
     summary.fixed <- r.inla$summary.fixed
     summary.fixed$variable <- rownames(summary.fixed)
@@ -91,7 +79,7 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
     # Change name of xstar to error variable
     variables <- rownames(summary.fixed)
     error_var_index <- which(variables == "xstar")
-    variables[error_var_index] <- error_var
+    variables[error_var_index] <- vars$error_var
 
     summary.fixed <- dplyr::mutate(summary.fixed, variable = variables)
 
@@ -103,39 +91,4 @@ inla_mcmc <- function(formula_moi, formula_imp = NULL,
   }
 
   return(mc.out)
-}
-
-#' Calculation of new probabilities for x, given the alpha (and rest)
-#'
-#' @param alpha coefficients for the imputation model
-#' @param z vector (if only one covariate) or matrix of covariates for imputation model.
-#' @param MC_matrix misclassification matrix
-#' @param w vector with misclassified covariate
-#'
-#' @return a vector with probabilities
-#' @keywords internal
-#'
-new_pi <- function(alpha, z, MC_matrix, w){
-
-  # Need to check nrow(t(z)) since
-  # - if z is a vector, ncol(z) = NULL, but nrow(t(z)) = 1
-  # - if z is a matrix, nrow(t(z)) = ncol(z)
-  # - if z is empty (no covariates in imp. model), then nrow(t(z)) = 0.
-  if(nrow(t(z)) == 0){
-    eta <- alpha[1]
-  }else{
-    eta <- alpha[1] + t(alpha[-c(1)]) %*% z
-  }
-  pi <- 1 / (1 + exp(-eta))
-
-  #p(w=1) and p(w=0) that will be used as normalizing constants below
-  pw1 <- MC_matrix[2, 2] * pi + MC_matrix[1, 2]*(1 - pi)
-  pw0 <- 1 - pw1
-
-  # probabilities to sample x in the MC iterations
-  sample_pi <- ifelse(w == 1, # if w=1
-                      MC_matrix[2, 2]*pi / pw1, # use this
-                      (1 - MC_matrix[2, 2])*pi / pw0 # otherwise this
-  )
-  return(sample_pi)
 }

@@ -2,12 +2,14 @@
 #'
 #' @inheritParams inla_mcmc
 #' @param ncores number of cores for the parallel computation.
+#' @param conditional Is the misclassification matrix conditional on other variables (so far only the moi response is possible, but this could easily be changed)
 #'
 #' @return A data frame with the resulting model.
 #' @export
 #'
 inla_is <- function(formula_moi, formula_imp = NULL,
-                    alpha, MC_matrix, data, niter, ncores = 4, ...){
+                    alpha, MC_matrix, data, niter, ncores = 4,
+                    conditional = FALSE, ...){
   r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
@@ -15,28 +17,24 @@ inla_is <- function(formula_moi, formula_imp = NULL,
 
   n <- nrow(data)
 
-  # Identify response variable
-  response <- all.vars(formula_moi)[1]
-
-  # Identify error variable
-  error_var <- all.vars(formula_imp)[1]
-
-  # Covariates in imputation model
-  imp_covs <- labels(stats::terms(formula_imp))
-
-  # Identify error free covariates
-  error_free_covs <- setdiff(c(response, error_var), all.vars(formula_moi))
+  vars <- identify_vars(formula_moi = formula_moi, formula_imp = formula_imp)
 
   mc.out <- parallel::mclapply(1:niter, function(i) {
 
-    sample_pi <- new_pi(alpha, z = data[, imp_covs],
-                        MC_matrix, w = data[, error_var])
+    if(!conditional){
+      sample_pi <- new_pi(alpha, z = data[, vars$imp_covs],
+                          MC_matrix, w = data[, vars$error_var])
+    }else{
+      sample_pi <- new_pi_conditional(alpha, z = data[, vars$imp_covs],
+                                      MC_matrix, w = data[, vars$error_var])
+    }
 
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
     xstar <- stats::rbinom(n, 1, sample_pi)
 
     new_data <- cbind(data, xstar = xstar)
-    new_formula_moi <- stats::reformulate(response = response, termlabels = c("xstar", error_free_covs))
+    new_formula_moi <- stats::reformulate(response = vars$response,
+                                          termlabels = c("xstar", vars$error_free_covs))
 
     if(i < niter){
       r.inla <- INLA::inla(new_formula_moi,
@@ -62,7 +60,7 @@ inla_is <- function(formula_moi, formula_imp = NULL,
     # Change name of xstar to error variable
     variables <- rownames(summary.fixed)
     error_var_index <- which(variables == "xstar")
-    variables[error_var_index] <- error_var
+    variables[error_var_index] <- vars$error_var
 
     summary.fixed <- dplyr::mutate(summary.fixed, variable = variables)
 
@@ -94,17 +92,7 @@ inla_is_conditional <- function(formula_moi, formula_imp = NULL,
 
   n <- nrow(data)
 
-  # Identify response variable
-  response <- all.vars(formula_moi)[1]
-
-  # Identify error variable
-  error_var <- all.vars(formula_imp)[1]
-
-  # Covariates in imputation model
-  imp_covs <- labels(stats::terms(formula_imp))
-
-  # Identify error free covariates
-  error_free_covs <- setdiff(c(response, error_var), all.vars(formula_moi))
+  vars <- identify_vars(formula_moi = formula_moi, formula_imp = formula_imp)
 
   mc.out <- parallel::mclapply(1:niter, function(i) {
 
@@ -142,42 +130,4 @@ inla_is_conditional <- function(formula_moi, formula_imp = NULL,
     results
 
   }, mc.cores = ncores)
-}
-
-#' Calculation of new probabilities for x, given the alpha (and rest)
-#'
-#' @param alpha coefficients for the imputation model
-#' @param z vector of covariates for imputation model, and that the misclassification matrix is conditioned on.
-#' @param MC_1 misclassification matrix for z = 1
-#' @param MC_0 misclassification matrix for z = 0
-#' @param w vector with misclassified covariate
-#'
-#' @return a vector with probabilities
-#'
-#'
-new_pi_conditional <- function(alpha, z, MC_0, MC_1, w){
-
-  # Need to check nrow(t(z)) since
-  # - if z is a vector, ncol(z) = NULL, but nrow(t(z)) = 1
-  # - if z is a matrix, nrow(t(z)) = ncol(z)
-  # - if z is empty (no covariates in imp. model), then nrow(t(z)) = 0.
-  if(nrow(t(z)) == 0){
-    eta <- alpha[1]
-  }else{
-    eta <- alpha[1] + t(alpha[-c(1)]) %*% z
-  }
-  pi <- 1 / (1 + exp(-eta))
-
-  #p(w=1) and p(w=0) that will be used as normalizing constants below
-  M_22 <- MC_0[2,2]*(1-z) + MC_1[2,2]*z
-  M_12 <- MC_0[1,2]*(1-z) + MC_1[1,2]*z
-  pw1 <- M_22 * pi + M_12*(1 - pi)
-  pw0 <- 1 - pw1
-
-  # probabilities to sample x in the MC iterations
-  sample_pi <- ifelse(w == 1, # if w=1
-                      M_22*pi / pw1, # use this
-                      (1 - M_22)*pi / pw0 # otherwise this
-  )
-  return(sample_pi)
 }

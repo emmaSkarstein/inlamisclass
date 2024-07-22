@@ -138,12 +138,13 @@ M0
 
 alphas <- glm(x~y, family = "binomial", data = validation)$coef
 
-case_control_model <- inla_is_conditional(formula_moi = y ~ w,
+case_control_model <- inla_is(formula_moi = y ~ w,
                               formula_imp = w ~ y,
                               alpha = alphas,
-                              MC_1 = M1, MC_0 = M0,
+                              MC_matrix = list(MC_1 = M1, MC_0 = M0),
                               data = incomplete_data,
                               niter = 3,
+                              conditional = TRUE,
                               family = "binomial", Ntrials = 1)
 
 ```

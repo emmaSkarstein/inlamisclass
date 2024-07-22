@@ -12,6 +12,7 @@ inla_is(
   data,
   niter,
   ncores = 4,
+  conditional = FALSE,
   ...
 )
 }
@@ -29,6 +30,8 @@ inla_is(
 \item{niter}{number of iterations for the MCMC}
 
 \item{ncores}{number of cores for the parallel computation.}
+
+\item{conditional}{Is the misclassification matrix conditional on other variables (so far only the moi response is possible, but this could easily be changed)}
 
 \item{...}{further arguments to be passed to inla().}
 }
