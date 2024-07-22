@@ -12,7 +12,7 @@ inla_is(
   data,
   niter,
   ncores = 4,
-  conditional = FALSE,
+  conditional = NULL,
   ...
 )
 }
@@ -31,7 +31,7 @@ inla_is(
 
 \item{ncores}{number of cores for the parallel computation.}
 
-\item{conditional}{Is the misclassification matrix conditional on other variables (so far only the moi response is possible, but this could easily be changed)}
+\item{conditional}{if the misclassification probabilities are conditional on some variable, then this should be the name of that variable.}
 
 \item{...}{further arguments to be passed to inla().}
 }
