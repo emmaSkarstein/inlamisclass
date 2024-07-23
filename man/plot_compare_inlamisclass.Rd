@@ -6,9 +6,10 @@
 \usage{
 plot_compare_inlamisclass(
   mcmc_results,
+  naive_mod,
+  correct_mod = NULL,
   niter = NULL,
   nburnin = 0,
-  naive_mod,
   plot_intercept = FALSE,
   num_inlamisclass_models = 1
 )
@@ -16,11 +17,13 @@ plot_compare_inlamisclass(
 \arguments{
 \item{mcmc_results}{an inlamisclass model or list of inlamisclass models.}
 
+\item{naive_mod}{a model that does not account for misclassification}
+
+\item{correct_mod}{a model that uses the true values of the covariate with misclassification (only possible in simulation studies)}
+
 \item{niter}{number of iterations for the MCMC}
 
 \item{nburnin}{number of iterations for the burn-in}
-
-\item{naive_mod}{a model that does not account for misclassification}
 
 \item{plot_intercept}{should estimated intercept be plotted?}
 
