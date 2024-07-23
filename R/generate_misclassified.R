@@ -18,7 +18,7 @@ generate_data <- function(n, p = 2, betas = c(1, 2, 2),
   # Generate binary covariate
   eta_x <- alphas[1] + alphas[2]*z
   pi_x <- 1/(1 + exp(-eta_x))
-  x <- stats::rbinom(n, 1, pi_x)
+  x <- stats::rbinom(n = n, size = 1, prob = pi_x)
 
   # Generate response
   eta_y <- betas[1] + betas[2]*x + betas[3]*z
