@@ -21,7 +21,9 @@ Imports:
     dplyr,
     tidyr,
     ggplot2,
-    scales
+    scales,
+    MASS,
+    mvtnorm
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)

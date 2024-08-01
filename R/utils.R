@@ -1,6 +1,6 @@
 #' Identify roles of covariates in formula
 #'
-#' @inheritParams inla_mcmc
+#' @inheritParams inla_is_mcmc
 #'
 #' @return A list of named variables.
 #'

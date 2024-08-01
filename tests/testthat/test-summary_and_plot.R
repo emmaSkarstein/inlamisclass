@@ -5,6 +5,8 @@ test_that("modelling works", {
   library(INLA)
   library(dplyr)
 
+  inla.setOption(num.threads = 1)
+
   # Birthweight analysis ----
   # Misclassification in smoking status assumed
   MC_matrix <- matrix(c(0.95, 0.05, 0.2, 0.8), nrow = 2, byrow = T)
@@ -14,7 +16,7 @@ test_that("modelling works", {
                                 formula_imp = smoke ~ 1,
                                 alpha = c(log(0.4/(1-0.4)), 0),
                                 MC_matrix = MC_matrix,
-                                data = birthweight, niter = 2)
+                                data = birthweight, niter = 2, ncores = 2)
 
   # Test plot_compare_inlamisclass
   naive_mod <- INLA::inla(bwt ~ smoke + lwt, data = birthweight)
@@ -25,21 +27,28 @@ test_that("modelling works", {
                                 formula_imp = smoke ~ lwt,
                                 alpha = c(-3, 0.02),
                                 MC_matrix = MC_matrix,
-                                data = birthweight, niter = 2)
+                                data = birthweight, niter = 2, ncores = 2)
 
   # Test plot_compare_inlamisclass with two inla_is models
   plot_compare_inlamisclass(mcmc_results = list(inlamisclass1 = birthweight_model1,
                                                 inlamisclass2 = birthweight_model2),
                             naive_mod = naive_mod, niter = 2, num_inlamisclass_models = 2)
 
-  # Test MCMC with one imputation covariate
-  birthweight_model <- inla_mcmc(formula_moi = bwt ~ smoke + lwt,
+  # Test iterative IS with one imputation covariate
+  birthweight_model <- inla_is_iterative(formula_moi = bwt ~ smoke + lwt,
                                  formula_imp = smoke ~ lwt,
                                  alpha = c(log(0.4/(1-0.4)), 0),
                                  MC_matrix = MC_matrix,
                                  data = birthweight, niter = 2, nburnin = 1)
 
   make_results_df(birthweight_model, niter = 2, nburnin = 1)$moi
+
+  # Test IS + MCMC
+  birthweight_model3 <- inla_is_mcmc(formula_moi = bwt ~ smoke + lwt,
+                                     formula_imp = smoke ~ lwt,
+                                     alpha0 = c(log(0.4/(1-0.4)), 0),
+                                     MC_matrix = MC_matrix,
+                                     data = birthweight, niter = 2, nburnin = 1)
 
 
   # Case-control analysis ----
@@ -62,7 +71,7 @@ test_that("modelling works", {
                                 MC_matrix = M,
                                 data = incomplete_data,
                                 niter = 2,
-                                family = "binomial", Ntrials = 1)
+                                family = "binomial", Ntrials = 1, ncores = 2)
 
   naive_cc <- inla(y ~ w, data = incomplete_data, family = "binomial", Ntrial = 1)
 
@@ -98,7 +107,7 @@ test_that("modelling works", {
                                 data = incomplete_data,
                                 niter = 2,
                                 conditional = "y",
-                                family = "binomial", Ntrials = 1)
+                                family = "binomial", Ntrials = 1, ncores = 2)
 
   case_control_model3 <- inla_is(formula_moi = y ~ w,
                                  formula_imp = w ~ 1,
@@ -107,7 +116,7 @@ test_that("modelling works", {
                                  data = incomplete_data,
                                  niter = 2,
                                  conditional = "y",
-                                 family = "binomial", Ntrials = 1)
+                                 family = "binomial", Ntrials = 1, ncores = 2)
 
 
   # Simulations ----
@@ -123,7 +132,7 @@ test_that("modelling works", {
                     alpha = c(-0.5, 0.25),
                     MC_matrix = MC_matrix,
                     data = data2,
-                    niter = 2)
+                    niter = 2, ncores = 2)
 
   naive2 <- inla(y ~ w + z, data = data2)
   correct2 <- inla(y ~ x + z, data = data2)
@@ -131,5 +140,7 @@ test_that("modelling works", {
   plot_compare_inlamisclass(mcmc_results = model2, naive_mod = naive2,
                             correct_mod = correct2,
                             plot_intercept = TRUE, niter = 2)
+
+
 
 })
