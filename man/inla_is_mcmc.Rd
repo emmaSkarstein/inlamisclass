@@ -11,7 +11,6 @@ inla_is_mcmc(
   MC_matrix,
   data,
   niter = 1600,
-  nburnin = 100,
   ...
 )
 }
@@ -27,8 +26,6 @@ inla_is_mcmc(
 \item{data}{data for the model}
 
 \item{niter}{number of iterations for the MCMC}
-
-\item{nburnin}{number of burn-in iterations}
 
 \item{...}{further arguments to be passed to inla().}
 }

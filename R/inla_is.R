@@ -93,7 +93,7 @@ inla_is <- function(formula_moi, formula_imp = NULL,
 #'
 inla_is_iterative <- function(formula_moi, formula_imp = NULL,
                       alpha, MC_matrix,
-                      data, niter = 1600, nburnin = 100,
+                      data, niter = 1600,
                       ...){
   # So far, this assumes the exposure model just has one covariate.
   # And the formula_moi does not really do much either

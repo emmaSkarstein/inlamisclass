@@ -82,7 +82,6 @@ Fm <- function(X, beta, R, a, Y, varB, n, p){
 #' @param MC_matrix misclassification matrix
 #' @param data data for the model
 #' @param niter number of iterations for the MCMC
-#' @param nburnin number of burn-in iterations
 #' @param ... further arguments to be passed to inla().
 #'
 #' @return A list with the resulting model.
@@ -90,7 +89,7 @@ Fm <- function(X, beta, R, a, Y, varB, n, p){
 #'
 inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
                          alpha0, MC_matrix,
-                         data, niter = 1600, nburnin = 100, ...){
+                         data, niter = 1600, ...){
 
   r.out.naive <- INLA::inla(formula_moi, data = data)#, ...)
 
@@ -169,6 +168,10 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
     variables[error_var_index] <- vars$error_var
 
     summary.fixed$variable <- variables
+
+    # Set names to alpha vector
+    alpha_names <- c("alpha.0", paste0("alpha.", vars$imp_covs))
+    names(alpha) <- alpha_names
 
     results <- list(mlik = r.inla$mlik[1,1],
                     summary.fixed = summary.fixed,

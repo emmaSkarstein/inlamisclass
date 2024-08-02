@@ -166,3 +166,22 @@ plot_compare_inlamisclass <- function(mcmc_results, naive_mod, correct_mod = NUL
 
 }
 
+acc_rate <- function(mcmc_results, niter = NULL, nburnin){
+  if(is.null(niter)){
+    niter <- length(mcmc_results)
+  }
+  trace <- (nburnin+1):niter
+  acc <- mean(do.call(rbind, lapply(mcmc_results, `[[`, "alphayes"))[trace])
+  return(acc)
+}
+
+summarize_alphas <- function(mcmc_results, niter = NULL, nburnin){
+  if(is.null(niter)){
+    niter <- length(mcmc_results)
+  }
+  trace <- (nburnin+1):niter
+  mcmc_results_after_burnin <- lapply(trace, function(i) mcmc_results[[i]])
+
+  alpha_vec <- data.frame(do.call(rbind, lapply(mcmc_results_after_burnin, `[[`, "alpha")))
+  return(alpha_vec)
+}
