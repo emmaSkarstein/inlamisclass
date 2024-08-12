@@ -49,10 +49,14 @@ new_pi <- function(alpha, z, MC_matrix, w){
   pi <- 1 / (1 + exp(-eta))
 
   #p(w=1) and p(w=0) that will be used as normalizing constants below
-  pw1 <- MC_matrix[2, 2] * pi + MC_matrix[1, 2]*(1 - pi)
-  pw0 <- 1 - pw1
+  #pw1 <- MC_matrix[2, 2] * pi + MC_matrix[1, 2]*(1 - pi)
+  #pw0 <- 1 - pw1
 
-  # probabilities to sample x in the MC iterations
+  # Tentative:
+  pw1 <- MC_matrix[1, 1]*(1 - pi) + MC_matrix[1, 2] * pi
+  pw0 <- MC_matrix[2, 1]*(1 - pi) + MC_matrix[2, 2] * pi
+
+  # Probabilities to sample x in the MC iterations
   sample_pi <- ifelse(w == 1, # if w=1
                       MC_matrix[2, 2]*pi / pw1, # use this
                       (1 - MC_matrix[2, 2])*pi / pw0 # otherwise this
