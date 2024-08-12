@@ -39,7 +39,7 @@ test_that("modelling works", {
                                  formula_imp = smoke ~ lwt,
                                  alpha = c(log(0.4/(1-0.4)), 0),
                                  MC_matrix = MC_matrix,
-                                 data = birthweight, niter = 2, nburnin = 1)
+                                 data = birthweight, niter = 2)
 
   make_results_df(birthweight_model, niter = 2, nburnin = 1)$moi
 
@@ -48,7 +48,7 @@ test_that("modelling works", {
                                      formula_imp = smoke ~ lwt,
                                      alpha0 = c(log(0.4/(1-0.4)), 0),
                                      MC_matrix = MC_matrix,
-                                     data = birthweight, niter = 2, nburnin = 1)
+                                     data = birthweight, niter = 2)
 
 
   # Case-control analysis ----
