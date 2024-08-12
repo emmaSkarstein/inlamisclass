@@ -166,6 +166,11 @@ plot_compare_inlamisclass <- function(mcmc_results, naive_mod, correct_mod = NUL
 
 }
 
+#' Calculate acceptance rate
+#'
+#' @inheritParams make_results_df
+#'
+#' @return Acceptance rate.
 acc_rate <- function(mcmc_results, niter = NULL, nburnin){
   if(is.null(niter)){
     niter <- length(mcmc_results)
@@ -175,7 +180,12 @@ acc_rate <- function(mcmc_results, niter = NULL, nburnin){
   return(acc)
 }
 
-summarize_alphas <- function(mcmc_results, niter = NULL, nburnin){
+#' Extract all the alpha samples from model object
+#'
+#' @inheritParams make_results_df
+#'
+#' @return Data frame of all the alpha samples.
+extract_alphas <- function(mcmc_results, niter = NULL, nburnin){
   if(is.null(niter)){
     niter <- length(mcmc_results)
   }
@@ -184,4 +194,27 @@ summarize_alphas <- function(mcmc_results, niter = NULL, nburnin){
 
   alpha_vec <- data.frame(do.call(rbind, lapply(mcmc_results_after_burnin, `[[`, "alpha")))
   return(alpha_vec)
+}
+
+#' Calculate summary statistics for the alphas
+#'
+#' @inheritParams make_results_df
+#'
+#' @return Summary statistics for the alphas
+summarize_alphas <- function(mcmc_results, niter = NULL, nburnin){
+  alpha_df <- extract_alphas(mcmc_results = mcmc_results, niter = niter, nburnin = nburnin)
+
+  means <- colMeans(alpha_df)
+
+  columns <- c("variable", "mean", "2.5%", "97.5%")
+  quants <- data.frame(matrix(NA, nrow = ncol(alpha_df), ncol = 4))
+  colnames(quants) <- columns
+
+  for(i in 1:ncol(alpha_df)){
+    quants_entry <- stats::quantile(alpha_df[,i], probs = c(0.025, 0.975))
+    quants[i, c("2.5%", "97.5%")] <- quants_entry
+    quants[i, "mean"] <- mean(alpha_df[,i])
+    quants[i, "variable"] <- colnames(alpha_df)[i]
+  }
+  return(quants)
 }
