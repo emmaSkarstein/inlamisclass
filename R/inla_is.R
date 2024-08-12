@@ -46,7 +46,7 @@ inla_is <- function(formula_moi, formula_imp = NULL,
                      control.mode = list(result = r.out.naive,
                                          restart = TRUE),
                      control.compute = list(return.marginals = FALSE),
-                     control.inla = list(int.strategy = 'eb'),
+                     #control.inla = list(int.strategy = 'eb'),
                      ...
       )
     }else if(i == niter){
@@ -84,8 +84,7 @@ inla_is <- function(formula_moi, formula_imp = NULL,
 #' @param alpha initial values for coefficients for imputation model
 #' @param MC_matrix misclassification matrix
 #' @param data data for the model
-#' @param niter number of iterations for the MCMC
-#' @param nburnin number of burn-in iterations
+#' @param niter number of iterations
 #' @param ... further arguments to be passed to inla().
 #'
 #' @return A data frame with the resulting model.
@@ -127,7 +126,7 @@ inla_is_iterative <- function(formula_moi, formula_imp = NULL,
                            control.mode = list(result = models_list[[ii]],
                                                restart = TRUE),
                            control.compute = list(return.marginals = FALSE),
-                           control.inla = list(int.strategy = 'eb'),
+                           #control.inla = list(int.strategy = 'eb'),
                            ...)
     }else if(ii == niter){
       r.inla <- INLA::inla(new_formula_moi,
@@ -144,8 +143,8 @@ inla_is_iterative <- function(formula_moi, formula_imp = NULL,
     r.inla.x <- INLA::inla(new_formula_imp, data = new_data,
                            family = "binomial",
                            control.compute = list(config = TRUE,
-                                                  return.marginals = FALSE),
-                           control.inla = list(int.strategy = 'eb'))
+                                                  return.marginals = FALSE))
+                           #control.inla = list(int.strategy = 'eb'))
 
     # This contains all n predicted X-values, and the estimates for alpha.0 and alpha.z
     r.alpha <- INLA::inla.posterior.sample(n = 1, r.inla.x)

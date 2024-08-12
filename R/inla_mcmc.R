@@ -91,7 +91,7 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
                          alpha0, MC_matrix,
                          data, niter = 1600, ...){
 
-  r.out.naive <- INLA::inla(formula_moi, data = data)#, ...)
+  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   alpha <- alpha0
 
@@ -128,17 +128,18 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
                    data=new_data,
                    control.mode = list(result = r.out.naive, restart=TRUE),
                    control.compute = list(return.marginals = FALSE),
-                   control.inla = list(int.strategy = 'eb'))
+                   #control.inla = list(int.strategy = 'eb'),
+                   ...)
 
     # Sample new alpha for the exposure model of x:
-    C <- FC(X = z, beta = alpha, R = R, a = a, varB = varAlpha, n = n, p = p)
     m <- Fm(X = z, beta = alpha, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
+    C <- FC(X = z, beta = alpha, R = R, a = a, varB = varAlpha, n = n, p = p)
     pi <- Fpi(X = z, beta = alpha, n = n)
 
     alphaStar <- MASS::mvrnorm(n = 1, mu = m, Sigma = C*Bb)
 
-    CStar <- FC(X = z, beta = alphaStar, R = R, a = a, varB = varAlpha, n = n, p = p)
     mStar <- Fm(X = z, beta = alphaStar, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
+    CStar <- FC(X = z, beta = alphaStar, R = R, a = a, varB = varAlpha, n = n, p = p)
     piStar <- Fpi(X = z, beta = alphaStar, n = n)
 
     likelyStar <- sum(stats::dbinom(xstar, 1, piStar, log=T))
