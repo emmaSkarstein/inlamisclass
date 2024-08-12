@@ -25,11 +25,9 @@ inla_is_iterative(
 
 \item{data}{data for the model}
 
-\item{niter}{number of iterations for the MCMC}
+\item{niter}{number of iterations}
 
 \item{...}{further arguments to be passed to inla().}
-
-\item{nburnin}{number of burn-in iterations}
 }
 \value{
 A data frame with the resulting model.
