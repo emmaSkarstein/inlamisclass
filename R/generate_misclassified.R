@@ -47,7 +47,7 @@ misclassify <- function(data, MC_matrix){
   # Misclassification probability depends on value of x
   w <- rep(NA, n)
   for(i in 1:n){
-    p_misclass <- ifelse(data$x[i] == 1, MC_matrix[2,2], MC_matrix[2,1])
+    p_misclass <- ifelse(data$x[i] == 1, MC_matrix[2,2], MC_matrix[1,2])
     w[i] <- stats::rbinom(1, 1, p_misclass)
   }
 
