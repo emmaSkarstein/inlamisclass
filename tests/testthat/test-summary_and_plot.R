@@ -126,6 +126,8 @@ test_that("modelling works", {
   data2 <- generate_misclassified(n = 200, p = 2, MC_matrix = MC_matrix,
                                   betas = c(1, 1, 1),
                                   alphas = c(-0.5, 0.25))
+  # Test sampling x
+  pi <- new_pi(alpha = c(-0.5, 0.25), z = data2$z, MC_matrix = MC_matrix, w = data2$w)
 
   model2 <- inla_is(formula_moi = y ~ w + z,
                     formula_imp = w ~ z,
