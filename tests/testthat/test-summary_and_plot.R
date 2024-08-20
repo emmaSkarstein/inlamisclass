@@ -100,6 +100,12 @@ test_that("modelling works", {
   exp_glm <- glm(x~y, family = "binomial", data = validation)$coef
   alphas <- exp_glm["(Intercept)"] + c(0, exp_glm["y"])
 
+  # Test sampling x conditional on y
+  pi_cond <- new_pi_conditional(alpha = alphas, z = case_control_data$y,
+                                MC_matrix = list(MC_0 = M0, MC_1 = M1),
+                                w = case_control_data$w,
+                                conditioning_var = case_control_data$y)
+
   case_control_model <- inla_is(formula_moi = y ~ w,
                                 formula_imp = w ~ y,
                                 alpha = alphas,
@@ -142,6 +148,8 @@ test_that("modelling works", {
   plot_compare_inlamisclass(mcmc_results = model2, naive_mod = naive2,
                             correct_mod = correct2,
                             plot_intercept = TRUE, niter = 2)
+
+
 
 
 
