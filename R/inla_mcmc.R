@@ -74,6 +74,43 @@ Fm <- function(X, beta, R, a, Y, varB, n, p){
   return(m)
 }
 
+#' Calculate components for MCMC stuff
+#'
+#' @param X Covariate matrix
+#' @param beta Coefficient vector
+#' @param R not sure
+#' @param a not sure
+#' @param Y Proposed response value
+#' @param varB Variance of what?
+#' @param Ntrials Ntrials for binomial regression
+#' @param n number of observations
+#' @param p number of covariates (excluding intercept)
+#'
+#' @return a list of all the components
+#' @keywords internal
+calc_pi_m_c <- function(X, beta, R, a, Y, varB, Ntrials = 1, n, p){
+  # pi
+  x <- cbind(rep(1, n), X)
+  eta <- x %*% beta
+  pi <- exp(eta)/(1+exp(eta))
+
+  # WMat
+  WiInv <- 1/(pi*(1-pi))
+  WMat <- diag(n)
+  diag(WMat) <- 1/WiInv
+
+  # FyTilde
+  yTilde <- eta + (Y/Ntrials-pi)*1/(pi*(1-pi))
+
+  # FC (Covariance)
+  C <- solve(1/varB*diag(1, p+1) + t(x) %*% WMat %*% x)
+
+  # Fm (mean)
+  m <- t(C %*% (1/varB*a + t(x) %*% WMat %*% yTilde))
+
+  return(list(pi = pi, WMat = WMat, yTilde = yTilde, C = C, m = m))
+}
+
 #' Fit model with misclassified covariate with INLA, importance sampling and MCMC
 #'
 #' @param formula_moi formula for the model of interest
@@ -91,7 +128,7 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
                          alpha0, MC_matrix,
                          data, niter = 1600, ...){
 
-  r.out.naive <- INLA::inla(formula_moi, data = data, ...)
+  r.out.naive <- INLA::inla(formula_moi, data = data)#, ...)
 
   alpha <- alpha0
 
@@ -115,8 +152,8 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
 
   mc.out <- list()
   for (ii in 1:niter){
-    sample_pi <- new_pi(alpha, z = z,
-                        MC_matrix, w = w)
+    sample_pi <- new_pi(alpha, z = z, MC_matrix, w = w)
+
     # We have a model for x; use the sample_pi probabilities derived above to sample from it
     xstar <- stats::rbinom(n, 1, sample_pi)
 
@@ -125,32 +162,32 @@ inla_is_mcmc <- function(formula_moi, formula_imp = NULL,
 
     #r.inla <- inla(y ~ xstar + z, data=dd,num.threads=1, control.mode = list(result = r.out,restart=TRUE))
     r.inla <- INLA::inla(new_formula_moi,
-                   data=new_data,
+                   data = new_data,
                    control.mode = list(result = r.out.naive, restart=TRUE),
                    control.compute = list(return.marginals = FALSE),
                    #control.inla = list(int.strategy = 'eb'),
                    ...)
 
     # Sample new alpha for the exposure model of x:
-    m <- Fm(X = z, beta = alpha, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
-    C <- FC(X = z, beta = alpha, R = R, a = a, varB = varAlpha, n = n, p = p)
-    pi <- Fpi(X = z, beta = alpha, n = n)
+    comps <- calc_pi_m_c(X = z, beta = alpha, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
+    m <- comps$m
+    C <- comps$C
+    pi <- comps$pi
 
-    alphaStar <- MASS::mvrnorm(n = 1, mu = m, Sigma = C*Bb)
+    alphaStar <- MASS::mvrnorm(n = 1, mu = m, Sigma = C*Bb) # Proposal for alpha
 
-    mStar <- Fm(X = z, beta = alphaStar, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
-    CStar <- FC(X = z, beta = alphaStar, R = R, a = a, varB = varAlpha, n = n, p = p)
-    piStar <- Fpi(X = z, beta = alphaStar, n = n)
+    compsStar <- calc_pi_m_c(X = z, beta = alphaStar, R = R, a = a, Y = xstar, varB = varAlpha, n = n, p = p)
+    mStar <- compsStar$m
+    CStar <- compsStar$C
+    piStar <- compsStar$pi
 
-    likelyStar <- sum(stats::dbinom(xstar, 1, piStar, log=T))
     likely <- sum(stats::dbinom(xstar, 1, pi, log=T))
-
-    logAlphaStar <- -1/2 * (alphaStar - a) %*% solve(R) %*% (alphaStar - a) + likelyStar
+    likelyStar <- sum(stats::dbinom(xstar, 1, piStar, log=T))
 
     logAlpha <- -1/2 * (alpha - a) %*% solve(R) %*% (alpha - a) + likely
+    logAlphaStar <- -1/2 * (alphaStar - a) %*% solve(R) %*% (alphaStar - a) + likelyStar
 
     logQAlpha <- mvtnorm::dmvnorm(x = alpha, mean = mStar, sigma = CStar*Bb, log=T)
-
     logQAlphaStar <- mvtnorm::dmvnorm(x = alphaStar, mean = m, sigma = C*Bb, log=T)
 
     logacc <- logAlphaStar - logAlpha + logQAlpha - logQAlphaStar
