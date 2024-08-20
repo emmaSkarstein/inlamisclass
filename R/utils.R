@@ -104,7 +104,7 @@ new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
 
   # This produces a list with n entries,
   M_22 <- MC_0[2,2]*(1-conditioning_var) + MC_1[2,2]*conditioning_var
-  M_12 <- MC_0[1,2]*(1-conditioning_var) + MC_1[1,2]*conditioning_var
+  M_12 <- MC_0[2,1]*(1-conditioning_var) + MC_1[2,1]*conditioning_var
 
   #p(w=1) and p(w=0) that will be used as normalizing constants below
   pw1 <- M_22 * pi + M_12*(1 - pi)
@@ -116,4 +116,36 @@ new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
                       (1 - M_22)*pi / pw0 # otherwise this
   )
   return(sample_pi)
+}
+
+#' Calculate some charateristics from simulated data
+#'
+#' @param data
+#'
+#' @return A ggplot2 object giving the sample misclassification matrix.
+#' @export
+#' @importFrom ggplot2 ggplot aes vars
+#' @importFrom rlang .data
+data_characteristics <- function(data){
+  pix0 <- sum(data$x==0)
+  pix1 <- sum(data$x==1)
+  est_MC_matrix <- table(x = data$x, w = data$w)/matrix(c(pix0, pix0, pix1, pix1), byrow = TRUE, nrow = 2)
+
+  # Convert misclassification matrix to data frame
+  matrix_df <- as.data.frame(as.table(round(est_MC_matrix, 3)))
+
+  # create confusion matrix with ggplot2
+  p <- ggplot2::ggplot(matrix_df, aes(x = .data$w, y = .data$x)) +
+    ggplot2::geom_tile(fill = "white", color = "black") +
+    ggplot2::theme_bw() +
+    ggplot2::coord_equal() +
+    ggplot2::scale_y_discrete(limits = rev) +
+    ggplot2::geom_text(aes(label = .data$Freq), color = "black") +
+    # following lines only increase text size (optional)
+    ggplot2::theme(
+      panel.grid = ggplot2::element_blank(),
+      panel.border = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank())
+
+  return(p)
 }
