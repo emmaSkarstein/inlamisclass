@@ -120,7 +120,7 @@ new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
 
 #' Calculate some charateristics from simulated data
 #'
-#' @param data
+#' @param data a simulated data set with a misclassified covariate
 #'
 #' @return A ggplot2 object giving the sample misclassification matrix.
 #' @export
