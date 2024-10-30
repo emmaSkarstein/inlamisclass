@@ -2,24 +2,18 @@
 % Please edit documentation in R/summary_and_plot.R
 \name{make_results_df}
 \alias{make_results_df}
-\title{Summarize results from inla_is or inla_mcmc}
+\title{Summarize results from inla_is_misclass}
 \usage{
-make_results_df(
-  mcmc_results,
-  niter = length(mcmc_results),
-  nburnin = length(mcmc_results) - niter
-)
+make_results_df(is_results, niter = length(is_results))
 }
 \arguments{
-\item{mcmc_results}{results from inla_is or inla_mcmc}
+\item{is_results}{results from inla_is_misclass}
 
-\item{niter}{number of iterations for the MCMC}
-
-\item{nburnin}{number of iterations for the burn-in}
+\item{niter}{number of iterations for the importance sampling}
 }
 \value{
 A dataframe with summary statistics.
 }
 \description{
-Summarize results from inla_is or inla_mcmc
+Summarize results from inla_is_misclass
 }

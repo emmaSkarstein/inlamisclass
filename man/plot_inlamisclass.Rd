@@ -4,18 +4,12 @@
 \alias{plot_inlamisclass}
 \title{Plot inlamisclass models}
 \usage{
-plot_inlamisclass(
-  mcmc_results,
-  niter = length(mcmc_results),
-  nburnin = length(mcmc_results) - niter
-)
+plot_inlamisclass(is_results, niter = length(is_results))
 }
 \arguments{
-\item{mcmc_results}{results from inla_is or inla_mcmc}
+\item{is_results}{results from inla_is_misclass}
 
-\item{niter}{number of iterations for the MCMC}
-
-\item{nburnin}{number of iterations for the burn-in}
+\item{niter}{number of iterations for the importance sampling}
 }
 \value{
 A ggplot2 object.

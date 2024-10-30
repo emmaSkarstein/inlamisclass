@@ -5,29 +5,26 @@
 \title{Plot and compare inlamisclass models with other INLA models}
 \usage{
 plot_compare_inlamisclass(
-  mcmc_results,
+  is_results,
   naive_mod,
   correct_mod = NULL,
   niter = NULL,
-  nburnin = 0,
   plot_intercept = FALSE,
   num_inlamisclass_models = 1
 )
 }
 \arguments{
-\item{mcmc_results}{an inlamisclass model or list of inlamisclass models.}
+\item{is_results}{results from inla_is_misclass}
 
 \item{naive_mod}{a model that does not account for misclassification}
 
 \item{correct_mod}{a model that uses the true values of the covariate with misclassification (only possible in simulation studies)}
 
-\item{niter}{number of iterations for the MCMC}
-
-\item{nburnin}{number of iterations for the burn-in}
+\item{niter}{number of iterations for the importance sampling}
 
 \item{plot_intercept}{should estimated intercept be plotted?}
 
-\item{num_inlamisclass_models}{number of inlamisclass models if mcmc_results is a list}
+\item{num_inlamisclass_models}{number of inlamisclass models if is_results is a list}
 }
 \value{
 A ggplot2 object.

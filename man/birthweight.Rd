@@ -14,7 +14,7 @@ A data frame with 189 rows and 3 columns:
 }
 }
 \source{
-Hosmer et al. (2013), <https://books.google.no/books?id=64JYAwAAQBAJ>
+Hosmer and Lemeshow (2000), <https://onlinelibrary.wiley.com/doi/book/10.1002/0471722146>
 }
 \usage{
 birthweight

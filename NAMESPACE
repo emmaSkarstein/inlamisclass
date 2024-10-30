@@ -2,9 +2,7 @@
 
 export(data_characteristics)
 export(generate_misclassified)
-export(inla_is)
-export(inla_is_iterative)
-export(inla_is_mcmc)
+export(inla_is_misclass)
 export(make_results_df)
 export(plot_compare_inlamisclass)
 export(plot_inlamisclass)

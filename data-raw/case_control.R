@@ -21,8 +21,8 @@ case_control_data_raw2 <- data.frame(case_control_data_raw1)
 
 colnames(case_control_data_raw2) <- c("y", "x", "w")
 
-case_control_data <- case_control_data_raw2 #%>%
+cervical_cancer <- case_control_data_raw2 #%>%
   #mutate(complete = ifelse(is.na(x), 0, 1))
 
-usethis::use_data(case_control_data, overwrite = TRUE)
+usethis::use_data(cervical_cancer, overwrite = TRUE)
 
