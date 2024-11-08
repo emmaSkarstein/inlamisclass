@@ -4,7 +4,7 @@ Title: Fitting Models with Misclassified Covariates with INLA and MCMC
 Version: 0.1.0
 Author: Emma Skarstein
 Maintainer: The package maintainer <emma@skarstein.no>
-Description: Functions for fitting models with misclassified covariates in INLA with Markov chain Monte-Carlo or importance sampling.
+Description: Functions for fitting models with misclassified covariates in INLA with importance sampling.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
