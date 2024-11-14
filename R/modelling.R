@@ -15,8 +15,14 @@
 #' @export
 #'
 inla_is_misclass <- function(formula_moi, formula_imp = NULL,
-                    alpha, MC_matrix, data, niter, ncores = 4,
+                    alpha, MC_matrix = NULL, data, niter, ncores = 4,
                     conditional = NULL, missing_only = FALSE, ...){
+  if(is.null(MC_matrix) && !missing_only){
+    stop("You have not provided a misclassification matrix. Do you mean to do missing data imputation only? If so, specify the argument 'missing_only = TRUE'.")
+  }
+  if(!is.null(MC_matrix) && missing_only){
+    stop("You have provided a misclassification matrix even though you have also specified 'missing_only = TRUE', meaning that there should not be any misclassification.")
+  }
   r.out.naive <- INLA::inla(formula_moi, data = data, ...)
 
   models_list <- list()
@@ -148,6 +154,10 @@ new_pi <- function(alpha, z, MC_matrix, w){
   # pi = success probability of x
   pi <- calculate_pi(alpha, z)
 
+  # If MC_matrix is NULL, assume this is missing data imputation. Then, just return pi.
+  if(is.null(MC_matrix)){
+    return(pi)
+  }
 
   pw1 <- MC_matrix[1, 2]*(1 - pi) + MC_matrix[2, 2] * pi
   pw0 <- MC_matrix[1, 1]*(1 - pi) + MC_matrix[2, 1] * pi
@@ -177,6 +187,11 @@ new_pi <- function(alpha, z, MC_matrix, w){
 new_pi_conditional <- function(alpha, z, MC_matrix, w, conditioning_var){
   # pi = success probability of x
   pi <- calculate_pi(alpha, z)
+
+  # If MC_matrix is NULL, assume this is missing data imputation. Then, just return pi.
+  if(is.null(MC_matrix)){
+    return(pi)
+  }
 
   # Extract the two MC matrices
   MC_0 <- MC_matrix$MC_0

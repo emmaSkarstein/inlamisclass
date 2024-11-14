@@ -1,5 +1,11 @@
 test_that("modelling, plotting and summary works", {
 
+  # Note: since getting accurate estimates would require running the importance
+  # sampling procedure for ~100000 iterations, which takes a long time, the
+  # tests in this file only run the IS for 2 iterations to ensure that it
+  # actually runs. Therefore, there are not many actual tests in this document,
+  # but if all the code runs then that is a great sign.
+
   library(inlamisclass)
   library(ggplot2)
   library(INLA)
@@ -137,6 +143,7 @@ test_that("modelling, plotting and summary works", {
 
   # Missing observations -------------------------------------------------------
 
+  # Assuming misclassification and missingness
   MC_matrix <- matrix(c(0.9, 0.1, 0.2, 0.8), nrow = 2, byrow = T)
 
   set.seed(1)
@@ -152,5 +159,28 @@ test_that("modelling, plotting and summary works", {
                              data = data_miss,
                              niter = 2, ncores = 2)
 
+  # Assuming only missingness, no MC
+  model_miss2 <- inla_is_misclass(formula_moi = y ~ w + z,
+                                 formula_imp = w ~ z,
+                                 alpha = c(-0.5, 0.25),
+                                 data = data_miss,
+                                 missing_only = TRUE,
+                                 niter = 2, ncores = 2)
+
+  # Check if no MC matrix and missing_only = FALSE
+  expect_error(inla_is_misclass(formula_moi = y ~ w + z,
+                                formula_imp = w ~ z,
+                                alpha = c(-0.5, 0.25),
+                                data = data_miss,
+                                niter = 2, ncores = 2))
+
+  # Check if MC_matrix and missing_only = TRUE
+  expect_error(inla_is_misclass(formula_moi = y ~ w + z,
+                                formula_imp = w ~ z,
+                                alpha = c(-0.5, 0.25),
+                                MC_matrix = MC_matrix,
+                                data = data_miss,
+                                missing_only = TRUE,
+                                niter = 2, ncores = 2))
 
 })
