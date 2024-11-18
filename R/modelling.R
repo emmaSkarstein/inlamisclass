@@ -48,7 +48,7 @@ inla_is_misclass <- function(formula_moi, formula_imp = NULL,
     # If missing_only == TRUE, we want to use the true covariate values whenever the covariate is not missing.
     if(missing_only){
       missing_ind <- is.na(data[, vars$error_var])
-      xstar[!missing_ind] <- data[, vars$error_var]
+      xstar[!missing_ind] <- data[!missing_ind, vars$error_var]
     }
 
     new_data <- cbind(data, xstar = xstar)

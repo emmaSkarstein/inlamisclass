@@ -152,6 +152,9 @@ test_that("modelling, plotting and summary works", {
                                   alphas = c(-0.5, 0.25))
   data_miss$w[1:10] <- NA
 
+  # Test new_pi
+  missing_pi <- new_pi(alpha = c(-0.5, 0.25), z = data_miss$z, MC_matrix = NULL, w = data_miss$w)
+
   model_miss <- inla_is_misclass(formula_moi = y ~ w + z,
                              formula_imp = w ~ z,
                              alpha = c(-0.5, 0.25),
@@ -182,5 +185,19 @@ test_that("modelling, plotting and summary works", {
                                 data = data_miss,
                                 missing_only = TRUE,
                                 niter = 2, ncores = 2))
+
+  # Looking at the sampled values
+  generate_missing <- function(n, n_miss){
+    data <- inlamisclass:::generate_data(n, p = 2, betas = c(1, 1, 1),
+                                         alphas = c(0, 1))
+    data$w <- data$x
+    data$w[1:n_miss] <- NA
+    return(data)
+  }
+  data_missing <- generate_missing(n = n, n_miss = 20)
+  table(data_missing$x)
+  missing_pi <- new_pi(alpha = c(0, 1), z = data_missing$z, MC_matrix = NULL, w = data_missing$w)
+  check_data <- cbind(data_missing, as.vector(missing_pi))
+  check_data$xstar <- stats::rbinom(n, 1, missing_pi)
 
 })
